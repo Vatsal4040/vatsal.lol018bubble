@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate Worthy Items Game 💎</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Chewy&family=Roboto:wght@400;700&display=swap');
+body {
+  font-family: 'Roboto', sans-serif;
+  background: #1b1b1b;
+  color: #f0f0f0;
+  margin: 0; padding: 0;
+}
+header {
+  position: sticky;
+  top: 0;
+  background: #111;
+  padding: 10px 20px;
+  font-size: 1.5em;
+  text-align: center;
+  z-index: 100;
+  border-bottom: 2px solid #444;
+}
+.search-bar {
+  width: 95%;
+  margin: 15px auto;
+  display: block;
+  padding: 10px;
+  font-size: 1em;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+}
+.category {
+  margin: 20px;
+}
+.category-header {
+  background: linear-gradient(90deg,#ff8c00,#ff0080);
+  padding: 10px 15px;
+  font-size: 1.3em;
+  font-family: 'Chewy', cursive;
+  cursor: pointer;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  transition: transform 0.2s;
+}
+.category-header:hover {
+  transform: scale(1.05);
+}
+.items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(120px,1fr));
+  gap: 15px;
+}
+.item-card {
+  background: #222;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 0.95em;
+  transition: transform 0.2s, background 0.2s;
+  cursor: pointer;
+}
+.item-card:hover {
+  transform: translateY(-5px);
+  background: #333;
+}
+.item-emoji {
+  font-size: 2em;
+  display: block;
+  margin-bottom: 5px;
+}
+.price {
+  color: #ffd700;
+  font-weight: bold;
+}
+.cart {
+  position: fixed;
+  right: 20px;
+  top: 80px;
+  background: #222;
+  padding: 15px;
+  border-radius: 10px;
+  width: 250px;
+  max-height: 70%;
+  overflow-y: auto;
+  box-shadow: 0 0 10px #000;
+}
+.cart h3 {
+  margin-top: 0;
+  text-align: center;
+  font-family: 'Chewy', cursive;
+  color: #ff8c00;
+}
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  margin: 5px 0;
+  font-size: 0.9em;
+}
+.cart-total {
+  margin-top: 10px;
+  text-align: center;
+  font-weight: bold;
+  color: #ffd700;
+}
+.remove-btn {
+  cursor: pointer;
+  color: red;
+  margin-left: 10px;
+}
+</style>
+</head>
+<body>
+
+<header>💎 Ultimate Worthy Items Collection 💎</header>
+
+<input type="text" id="search" class="search-bar" placeholder="Search items... 🔍">
+
+<div id="categories"></div>
+
+<div class="cart" id="cart">
+  <h3>🛒 Cart</h3>
+  <div id="cart-items"></div>
+  <div class="cart-total" id="cart-total">Total: $0</div>
+</div>
+
+<script>
+const ITEMS = {
+  "🎁 Everyday": [
+    {name:"Coffee", price:2, emoji:"☕"}, {name:"Big Mac", price:5, emoji:"🍔"}, {name:"Burger King Whopper", price:6, emoji:"🍔"},
+    {name:"Ice Cream Cone", price:3, emoji:"🍦"}, {name:"Pack of Chips", price:2, emoji:"🍟"}, {name:"Chocolate Bar", price:1, emoji:"🍫"},
+    {name:"Soda", price:2, emoji:"🥤"}, {name:"Water Bottle", price:1, emoji:"💧"}, {name:"Pizza Slice", price:4, emoji:"🍕"},
+    {name:"Donut", price:2, emoji:"🍩"}, {name:"Sandwich", price:3, emoji:"🥪"}, {name:"Taco", price:4, emoji:"🌮"}, {name:"Pancakes", price:5, emoji:"🥞"},
+    {name:"French Fries", price:3, emoji:"🍟"}, {name:"Bagel", price:2, emoji:"🥯"}, {name:"Muffin", price:3, emoji:"🧁"}, {name:"Cookie", price:1, emoji:"🍪"},
+    {name:"Smoothie", price:4, emoji:"🍹"}, {name:"Juice", price:3, emoji:"🧃"}, {name:"Milkshake", price:5, emoji:"🥛"}
+  ],
+  "📱 Tech & Lifestyle": [
+    {name:"Smartphone", price:1000, emoji:"📱"}, {name:"Laptop", price:1200, emoji:"💻"}, {name:"Smartwatch", price:400, emoji:"⌚"},
+    {name:"Wireless Earbuds", price:150, emoji:"🎧"}, {name:"VR Headset", price:500, emoji:"🕶️"}, {name:"Gaming Console", price:500, emoji:"🎮"},
+    {name:"Drone", price:700, emoji:"🛸"}, {name:"Electric Scooter", price:800, emoji:"🛴"}, {name:"Fitness Tracker", price:120, emoji:"🏃‍♂️"},
+    {name:"Camera", price:900, emoji:"📷"}, {name:"Tablet", price:600, emoji:"📲"}, {name:"3D Printer", price:2000, emoji:"🖨️"}, {name:"Smart Glasses", price:1000, emoji:"🕶️"},
+    {name:"Gaming Mouse", price:80, emoji:"🖱️"}, {name:"Mechanical Keyboard", price:120, emoji:"⌨️"}
+  ],
+  "🚗 Vehicles": [
+    {name:"Bicycle", price:150, emoji:"🚲"}, {name:"Motorbike", price:1000, emoji:"🏍️"}, {name:"Car", price:20000, emoji:"🚗"}, {name:"Electric Car", price:35000, emoji:"🚙"},
+    {name:"Yacht", price:5000000, emoji:"🛥️"}, {name:"Private Jet", price:50000000, emoji:"✈️"}, {name:"Skateboard", price:50, emoji:"🛹"}, {name:"Truck", price:30000, emoji:"🚚"},
+    {name:"Helicopter", price:2000000, emoji:"🚁"}, {name:"Tractor", price:15000, emoji:"🚜"}, {name:"Segway", price:600, emoji:"🛴"}, {name:"Roller Skates", price:80, emoji:"🛼"},
+    {name:"Electric Bike", price:1200, emoji:"🚲"}, {name:"Scooter", price:400, emoji:"🛵"}, {name:"Bus", price:50000, emoji:"🚌"}
+  ],
+  "🏠 Property": [
+    {name:"Small Apartment", price:100000, emoji:"🏢"}, {name:"Family House", price:300000, emoji:"🏠"}, {name:"Luxury Villa", price:2000000, emoji:"🏡"},
+    {name:"Castle", price:10000000, emoji:"🏰"}, {name:"Penthouse", price:5000000, emoji:"🏙️"}, {name:"Beach House", price:4000000, emoji:"🏖️"},
+    {name:"Farmhouse", price:700000, emoji:"🌾"}, {name:"Treehouse", price:100000, emoji:"🌳"}, {name:"Igloo", price:50000, emoji:"🧊"}, {name:"Cave Home", price:80000, emoji:"🕳️"},
+    {name:"Mansion", price:8000000, emoji:"🏛️"}, {name:"Studio Apartment", price:90000, emoji:"🏘️"}, {name:"Loft", price:150000, emoji:"🏚️"}, {name:"Cabin", price:120000, emoji:"🛖"}, {name:"Chalet", price:300000, emoji:"⛷️"}
+  ],
+  "✈️ Air & Sea": [
+    {name:"Commercial Plane Ticket", price:500, emoji:"✈️"}, {name:"Private Jet Flight", price:100000, emoji:"🛩️"}, {name:"Cruise Ticket", price:2000, emoji:"🚢"},
+    {name:"Submarine", price:10000000, emoji:"🛳️"}, {name:"Hot Air Balloon Ride", price:300, emoji:"🎈"}, {name:"Paragliding Session", price:150, emoji:"🪂"},
+    {name:"Sailboat", price:50000, emoji:"⛵"}, {name:"Jet Ski", price:8000, emoji:"🛥️"}, {name:"Ferry Ticket", price:20, emoji:"⛴️"}, {name:"Space Shuttle Ticket", price:5000000, emoji:"🚀"},
+    {name:"Kayak", price:500, emoji:"🛶"}, {name:"Fishing Boat", price:10000, emoji:"🎣"}, {name:"Luxury Cruise", price:200000, emoji:"🛳️"}, {name:"Hovercraft", price:500000, emoji:"🛴"}, {name:"Speedboat", price:80000, emoji:"🚤"}
+  ]
+};
+
+// Expand more categories if needed to reach 100+ items
+
+const categoriesDiv = document.getElementById('categories');
+const cartItemsDiv = document.getElementById('cart-items');
+const cartTotalDiv = document.getElementById('cart-total');
+
+let cart = {};
+
+function renderCategories(filter="") {
+  categoriesDiv.innerHTML = '';
+  for (const [category, items] of Object.entries(ITEMS)) {
+    const filteredItems = items.filter(i => i.name.toLowerCase().includes(filter.toLowerCase()));
+    if(filteredItems.length === 0) continue;
+
+    const catDiv = document.createElement('div');
+    catDiv.classList.add('category');
+
+    const header = document.createElement('div');
+    header.classList.add('category-header');
+    header.textContent = category;
+    catDiv.appendChild(header);
+
+    const itemsDiv = document.createElement('div');
+    itemsDiv.classList.add('items');
+
+    filteredItems.forEach(item => {
+      const card = document.createElement('div');
+      card.classList.add('item-card');
+      card.innerHTML = `<span class="item-emoji">${item.emoji}</span>
+                        <strong>${item.name}</strong><br>
+                        <span class="price">$${item.price.toLocaleString()}</span>`;
+      card.addEventListener('click', () => addToCart(item));
+      itemsDiv.appendChild(card);
+    });
+
+    catDiv.appendChild(itemsDiv);
+    categoriesDiv.appendChild(catDiv);
+
+    header.addEventListener('click', () => {
+      itemsDiv.style.display = itemsDiv.style.display === 'none' ? 'grid' : 'none';
+    });
+  }
+}
+
+function addToCart(item) {
+  if(cart[item.name]) cart[item.name].qty += 1;
+  else cart[item.name] = { ...item, qty: 1 };
+  renderCart();
+}
+
+function removeFromCart(itemName) {
+  delete cart[itemName];
+  renderCart();
+}
+
+function renderCart() {
+  cartItemsDiv.innerHTML = '';
+  let total = 0;
+  for(const [name, item] of Object.entries(cart)) {
+    total += item.price * item.qty;
+    const div = document.createElement('div');
+    div.classList.add('cart-item');
+    div.innerHTML = `${item.emoji} ${name} x${item.qty} <span class="remove-btn" onclick="removeFromCart('${name}')">✖</span>`;
+    cartItemsDiv.appendChild(div);
+  }
+  cartTotalDiv.textContent = `Total: $${total.toLocaleString()}`;
+}
+
+document.getElementById('search').addEventListener('input', e => {
+  renderCategories(e.target.value);
+});
+
+renderCategories();
+</script>
+
+</body>
+</html>
