@@ -1,242 +1,415 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ultimate Worthy Items Game 💎</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Chewy&family=Roboto:wght@400;700&display=swap');
-body {
-  font-family: 'Roboto', sans-serif;
-  background: #1b1b1b;
-  color: #f0f0f0;
-  margin: 0; padding: 0;
-}
-header {
-  position: sticky;
-  top: 0;
-  background: #111;
-  padding: 10px 20px;
-  font-size: 1.5em;
-  text-align: center;
-  z-index: 100;
-  border-bottom: 2px solid #444;
-}
-.search-bar {
-  width: 95%;
-  margin: 15px auto;
-  display: block;
-  padding: 10px;
-  font-size: 1em;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-}
-.category {
-  margin: 20px;
-}
-.category-header {
-  background: linear-gradient(90deg,#ff8c00,#ff0080);
-  padding: 10px 15px;
-  font-size: 1.3em;
-  font-family: 'Chewy', cursive;
-  cursor: pointer;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  transition: transform 0.2s;
-}
-.category-header:hover {
-  transform: scale(1.05);
-}
-.items {
-  display: grid;
-  grid-template-columns: repeat(auto-fill,minmax(120px,1fr));
-  gap: 15px;
-}
-.item-card {
-  background: #222;
-  padding: 15px;
-  border-radius: 10px;
-  text-align: center;
-  font-size: 0.95em;
-  transition: transform 0.2s, background 0.2s;
-  cursor: pointer;
-}
-.item-card:hover {
-  transform: translateY(-5px);
-  background: #333;
-}
-.item-emoji {
-  font-size: 2em;
-  display: block;
-  margin-bottom: 5px;
-}
-.price {
-  color: #ffd700;
-  font-weight: bold;
-}
-.cart {
-  position: fixed;
-  right: 20px;
-  top: 80px;
-  background: #222;
-  padding: 15px;
-  border-radius: 10px;
-  width: 250px;
-  max-height: 70%;
-  overflow-y: auto;
-  box-shadow: 0 0 10px #000;
-}
-.cart h3 {
-  margin-top: 0;
-  text-align: center;
-  font-family: 'Chewy', cursive;
-  color: #ff8c00;
-}
-.cart-item {
-  display: flex;
-  justify-content: space-between;
-  margin: 5px 0;
-  font-size: 0.9em;
-}
-.cart-total {
-  margin-top: 10px;
-  text-align: center;
-  font-weight: bold;
-  color: #ffd700;
-}
-.remove-btn {
-  cursor: pointer;
-  color: red;
-  margin-left: 10px;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>touch pop · vanilla bubble game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(145deg, #1b3358 0%, #0d1c33 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      touch-action: pan-y; /* allow gentle vertical pull, but canvas will block */
+    }
+    .game-wrapper {
+      width: 100%;
+      max-width: 420px;
+      padding: 12px 10px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 60px;
+      padding: 8px 16px;
+      margin-bottom: 16px;
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+    .score-box {
+      background: #f2c94c;
+      color: #1e2b41;
+      font-weight: 800;
+      font-size: 1.7rem;
+      padding: 4px 20px;
+      border-radius: 40px;
+      letter-spacing: 1px;
+      text-shadow: 2px 2px 0 rgba(255,255,255,0.3);
+      box-shadow: inset 0 -3px 0 #b38f2e;
+    }
+    .reset-btn {
+      background: rgba(255,255,255,0.25);
+      border: 2px solid rgba(255,255,255,0.7);
+      color: white;
+      font-size: 1.3rem;
+      font-weight: 600;
+      width: 56px;
+      height: 56px;
+      border-radius: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: 0.15s;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+      touch-action: manipulation;
+    }
+    .reset-btn:active {
+      transform: translateY(5px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.4);
+    }
+    .canvas-container {
+      width: 100%;
+      background: #8fc5e9;
+      border-radius: 36px;
+      box-shadow: 0 20px 30px rgba(0, 0, 0, 0.6), inset 0 -3px 0 rgba(0,0,0,0.2);
+      padding: 8px;
+      background: #70a9d1;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: radial-gradient(circle at 30% 30%, #b3e2ff, #4790c0);
+      border-radius: 28px;
+      touch-action: none;  /* kills all browser scrolling/zooming inside canvas */
+      cursor: pointer;
+      box-shadow: inset 0 -6px 0 rgba(0,0,0,0.2);
+    }
+    .instruction {
+      color: rgba(255,255,255,0.9);
+      margin-top: 18px;
+      font-weight: 500;
+      text-shadow: 0 2px 2px black;
+      display: flex;
+      gap: 12px;
+      font-size: 1.1rem;
+    }
+    .instruction span {
+      background: rgba(255,255,255,0.2);
+      padding: 6px 18px;
+      border-radius: 40px;
+      backdrop-filter: blur(4px);
+    }
+    /* disable pull-to-refresh etc on canvas */
+    .no-touch-action {
+      touch-action: none;
+    }
+  </style>
 </head>
 <body>
+  <div class="game-wrapper">
+    <div class="header">
+      <div class="score-box" id="scoreDisplay">0</div>
+      <div class="reset-btn" id="resetButton" role="button" aria-label="restart game">↻</div>
+    </div>
+    <div class="canvas-container">
+      <canvas id="gameCanvas" width="400" height="600"></canvas>
+    </div>
+    <div class="instruction">
+      <span>👆 pop with fingers</span>
+      <span>✨ multi‑touch</span>
+    </div>
+  </div>
+  <script>
+    (function() {
+      // ----- canvas & context -----
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
 
-<header>💎 Ultimate Worthy Items Collection 💎</header>
+      // fixed logical resolution (will be scaled by CSS)
+      const CANVAS_W = 400;
+      const CANVAS_H = 600;
+      canvas.width = CANVAS_W;
+      canvas.height = CANVAS_H;
 
-<input type="text" id="search" class="search-bar" placeholder="Search items... 🔍">
+      // ----- game state -----
+      let bubbles = [];                 // array of bubble objects
+      let score = 0;
+      const scoreElement = document.getElementById('scoreDisplay');
 
-<div id="categories"></div>
+      // ----- bubble parameters -----
+      const MIN_RADIUS = 15;
+      const MAX_RADIUS = 26;
+      const MIN_SPEED = 0.7;
+      const MAX_SPEED = 2.4;
+      const SPAWN_INTERVAL_MS = 750;    // ms between spawns
 
-<div class="cart" id="cart">
-  <h3>🛒 Cart</h3>
-  <div id="cart-items"></div>
-  <div class="cart-total" id="cart-total">Total: $0</div>
-</div>
+      // ----- time based spawn -----
+      let lastSpawnTime = performance.now();
 
-<script>
-const ITEMS = {
-  "🎁 Everyday": [
-    {name:"Coffee", price:2, emoji:"☕"}, {name:"Big Mac", price:5, emoji:"🍔"}, {name:"Burger King Whopper", price:6, emoji:"🍔"},
-    {name:"Ice Cream Cone", price:3, emoji:"🍦"}, {name:"Pack of Chips", price:2, emoji:"🍟"}, {name:"Chocolate Bar", price:1, emoji:"🍫"},
-    {name:"Soda", price:2, emoji:"🥤"}, {name:"Water Bottle", price:1, emoji:"💧"}, {name:"Pizza Slice", price:4, emoji:"🍕"},
-    {name:"Donut", price:2, emoji:"🍩"}, {name:"Sandwich", price:3, emoji:"🥪"}, {name:"Taco", price:4, emoji:"🌮"}, {name:"Pancakes", price:5, emoji:"🥞"},
-    {name:"French Fries", price:3, emoji:"🍟"}, {name:"Bagel", price:2, emoji:"🥯"}, {name:"Muffin", price:3, emoji:"🧁"}, {name:"Cookie", price:1, emoji:"🍪"},
-    {name:"Smoothie", price:4, emoji:"🍹"}, {name:"Juice", price:3, emoji:"🧃"}, {name:"Milkshake", price:5, emoji:"🥛"}
-  ],
-  "📱 Tech & Lifestyle": [
-    {name:"Smartphone", price:1000, emoji:"📱"}, {name:"Laptop", price:1200, emoji:"💻"}, {name:"Smartwatch", price:400, emoji:"⌚"},
-    {name:"Wireless Earbuds", price:150, emoji:"🎧"}, {name:"VR Headset", price:500, emoji:"🕶️"}, {name:"Gaming Console", price:500, emoji:"🎮"},
-    {name:"Drone", price:700, emoji:"🛸"}, {name:"Electric Scooter", price:800, emoji:"🛴"}, {name:"Fitness Tracker", price:120, emoji:"🏃‍♂️"},
-    {name:"Camera", price:900, emoji:"📷"}, {name:"Tablet", price:600, emoji:"📲"}, {name:"3D Printer", price:2000, emoji:"🖨️"}, {name:"Smart Glasses", price:1000, emoji:"🕶️"},
-    {name:"Gaming Mouse", price:80, emoji:"🖱️"}, {name:"Mechanical Keyboard", price:120, emoji:"⌨️"}
-  ],
-  "🚗 Vehicles": [
-    {name:"Bicycle", price:150, emoji:"🚲"}, {name:"Motorbike", price:1000, emoji:"🏍️"}, {name:"Car", price:20000, emoji:"🚗"}, {name:"Electric Car", price:35000, emoji:"🚙"},
-    {name:"Yacht", price:5000000, emoji:"🛥️"}, {name:"Private Jet", price:50000000, emoji:"✈️"}, {name:"Skateboard", price:50, emoji:"🛹"}, {name:"Truck", price:30000, emoji:"🚚"},
-    {name:"Helicopter", price:2000000, emoji:"🚁"}, {name:"Tractor", price:15000, emoji:"🚜"}, {name:"Segway", price:600, emoji:"🛴"}, {name:"Roller Skates", price:80, emoji:"🛼"},
-    {name:"Electric Bike", price:1200, emoji:"🚲"}, {name:"Scooter", price:400, emoji:"🛵"}, {name:"Bus", price:50000, emoji:"🚌"}
-  ],
-  "🏠 Property": [
-    {name:"Small Apartment", price:100000, emoji:"🏢"}, {name:"Family House", price:300000, emoji:"🏠"}, {name:"Luxury Villa", price:2000000, emoji:"🏡"},
-    {name:"Castle", price:10000000, emoji:"🏰"}, {name:"Penthouse", price:5000000, emoji:"🏙️"}, {name:"Beach House", price:4000000, emoji:"🏖️"},
-    {name:"Farmhouse", price:700000, emoji:"🌾"}, {name:"Treehouse", price:100000, emoji:"🌳"}, {name:"Igloo", price:50000, emoji:"🧊"}, {name:"Cave Home", price:80000, emoji:"🕳️"},
-    {name:"Mansion", price:8000000, emoji:"🏛️"}, {name:"Studio Apartment", price:90000, emoji:"🏘️"}, {name:"Loft", price:150000, emoji:"🏚️"}, {name:"Cabin", price:120000, emoji:"🛖"}, {name:"Chalet", price:300000, emoji:"⛷️"}
-  ],
-  "✈️ Air & Sea": [
-    {name:"Commercial Plane Ticket", price:500, emoji:"✈️"}, {name:"Private Jet Flight", price:100000, emoji:"🛩️"}, {name:"Cruise Ticket", price:2000, emoji:"🚢"},
-    {name:"Submarine", price:10000000, emoji:"🛳️"}, {name:"Hot Air Balloon Ride", price:300, emoji:"🎈"}, {name:"Paragliding Session", price:150, emoji:"🪂"},
-    {name:"Sailboat", price:50000, emoji:"⛵"}, {name:"Jet Ski", price:8000, emoji:"🛥️"}, {name:"Ferry Ticket", price:20, emoji:"⛴️"}, {name:"Space Shuttle Ticket", price:5000000, emoji:"🚀"},
-    {name:"Kayak", price:500, emoji:"🛶"}, {name:"Fishing Boat", price:10000, emoji:"🎣"}, {name:"Luxury Cruise", price:200000, emoji:"🛳️"}, {name:"Hovercraft", price:500000, emoji:"🛴"}, {name:"Speedboat", price:80000, emoji:"🚤"}
-  ]
-};
+      // ----- helper: random range -----
+      const rand = (min, max) => Math.random() * (max - min) + min;
+      const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-// Expand more categories if needed to reach 100+ items
+      // ----- create a new bubble (spawn at bottom) -----
+      function createBubble() {
+        const radius = rand(MIN_RADIUS, MAX_RADIUS);
+        const x = rand(radius, CANVAS_W - radius);
+        const y = CANVAS_H - radius;               // appear at bottom edge
+        const speed = rand(MIN_SPEED, MAX_SPEED);
+        // random cheerful color (HSL)
+        const hue = randInt(0, 360);
+        const sat = 70 + randInt(0, 25);
+        const light = 60 + randInt(0, 20);
+        return {
+          x, y,
+          r: radius,
+          speed,
+          color: `hsl(${hue}, ${sat}%, ${light}%)`,
+        };
+      }
 
-const categoriesDiv = document.getElementById('categories');
-const cartItemsDiv = document.getElementById('cart-items');
-const cartTotalDiv = document.getElementById('cart-total');
+      // ----- update bubble positions, remove offscreen (top) -----
+      function updateBubbles() {
+        for (let i = bubbles.length - 1; i >= 0; i--) {
+          const b = bubbles[i];
+          // move upward
+          b.y -= b.speed;
+          // if completely above canvas (even accounting for radius), remove
+          if (b.y + b.r < 0) {
+            bubbles.splice(i, 1);
+          }
+        }
+      }
 
-let cart = {};
+      // ----- spawn new bubbles based on time -----
+      function spawnBubbles(now) {
+        if (now - lastSpawnTime >= SPAWN_INTERVAL_MS) {
+          bubbles.push(createBubble());
+          lastSpawnTime = now;
+        }
+      }
 
-function renderCategories(filter="") {
-  categoriesDiv.innerHTML = '';
-  for (const [category, items] of Object.entries(ITEMS)) {
-    const filteredItems = items.filter(i => i.name.toLowerCase().includes(filter.toLowerCase()));
-    if(filteredItems.length === 0) continue;
+      // ----- drawing -----
+      function draw() {
+        ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
 
-    const catDiv = document.createElement('div');
-    catDiv.classList.add('category');
+        // draw subtle water surface effect
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(0, 0, CANVAS_W, 10);
 
-    const header = document.createElement('div');
-    header.classList.add('category-header');
-    header.textContent = category;
-    catDiv.appendChild(header);
+        // draw each bubble with glow
+        for (let b of bubbles) {
+          // shadow for depth
+          ctx.shadowColor = 'rgba(0,0,0,0.25)';
+          ctx.shadowBlur = 12;
+          ctx.shadowOffsetY = 3;
 
-    const itemsDiv = document.createElement('div');
-    itemsDiv.classList.add('items');
+          // main bubble
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          ctx.fillStyle = b.color;
+          ctx.fill();
 
-    filteredItems.forEach(item => {
-      const card = document.createElement('div');
-      card.classList.add('item-card');
-      card.innerHTML = `<span class="item-emoji">${item.emoji}</span>
-                        <strong>${item.name}</strong><br>
-                        <span class="price">$${item.price.toLocaleString()}</span>`;
-      card.addEventListener('click', () => addToCart(item));
-      itemsDiv.appendChild(card);
-    });
+          // shiny highlight (small white oval)
+          ctx.shadowBlur = 0;    // no shadow for highlight
+          ctx.shadowOffsetY = 0;
+          ctx.beginPath();
+          ctx.ellipse(b.x - b.r*0.2, b.y - b.r*0.2, b.r*0.2, b.r*0.1, 0, 0, 2*Math.PI);
+          ctx.fillStyle = 'rgba(255,255,255,0.45)';
+          ctx.fill();
 
-    catDiv.appendChild(itemsDiv);
-    categoriesDiv.appendChild(catDiv);
+          // tiny sparkle
+          ctx.beginPath();
+          ctx.arc(b.x - b.r*0.3, b.y - b.r*0.3, b.r*0.08, 0, 2*Math.PI);
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
+          ctx.fill();
+        }
 
-    header.addEventListener('click', () => {
-      itemsDiv.style.display = itemsDiv.style.display === 'none' ? 'grid' : 'none';
-    });
-  }
-}
+        // reset shadow
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
 
-function addToCart(item) {
-  if(cart[item.name]) cart[item.name].qty += 1;
-  else cart[item.name] = { ...item, qty: 1 };
-  renderCart();
-}
+        // optional: draw very subtle grid lines for fun (barely visible)
+        ctx.strokeStyle = 'rgba(255,255,240,0.1)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < CANVAS_H; i += 30) {
+          ctx.beginPath();
+          ctx.moveTo(0, i);
+          ctx.lineTo(CANVAS_W, i);
+          ctx.stroke();
+        }
+      }
 
-function removeFromCart(itemName) {
-  delete cart[itemName];
-  renderCart();
-}
+      // ----- map client coordinates to canvas pixel coordinates -----
+      function getCanvasCoords(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        // check if touch is inside canvas area (with a tiny margin)
+        if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) {
+          return null;
+        }
+        // scale factors: logical size / displayed size
+        const scaleX = CANVAS_W / rect.width;
+        const scaleY = CANVAS_H / rect.height;
+        // relative position inside canvas element (0..1)
+        const relX = (clientX - rect.left) / rect.width;
+        const relY = (clientY - rect.top) / rect.height;
+        // clamp to [0,1] for safety
+        const canvasX = Math.min(CANVAS_W, Math.max(0, relX * CANVAS_W));
+        const canvasY = Math.min(CANVAS_H, Math.max(0, relY * CANVAS_H));
+        return { x: canvasX, y: canvasY };
+      }
 
-function renderCart() {
-  cartItemsDiv.innerHTML = '';
-  let total = 0;
-  for(const [name, item] of Object.entries(cart)) {
-    total += item.price * item.qty;
-    const div = document.createElement('div');
-    div.classList.add('cart-item');
-    div.innerHTML = `${item.emoji} ${name} x${item.qty} <span class="remove-btn" onclick="removeFromCart('${name}')">✖</span>`;
-    cartItemsDiv.appendChild(div);
-  }
-  cartTotalDiv.textContent = `Total: $${total.toLocaleString()}`;
-}
+      // ----- core touch/mouse handler: pop bubbles at given coordinates -----
+      function popBubblesAt(clientPositions) {
+        if (!clientPositions.length) return;
 
-document.getElementById('search').addEventListener('input', e => {
-  renderCategories(e.target.value);
-});
+        const toRemove = new Set();   // use bubble objects as keys
 
-renderCategories();
-</script>
+        for (let pos of clientPositions) {
+          const canvasPt = getCanvasCoords(pos.clientX, pos.clientY);
+          if (!canvasPt) continue;
 
+          // check all bubbles for collision
+          for (let bubble of bubbles) {
+            const dx = canvasPt.x - bubble.x;
+            const dy = canvasPt.y - bubble.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist <= bubble.r) {
+              toRemove.add(bubble);   // mark for removal (no duplicates)
+            }
+          }
+        }
+
+        if (toRemove.size > 0) {
+          // filter out the popped bubbles
+          bubbles = bubbles.filter(b => !toRemove.has(b));
+          // increase score by number of popped bubbles
+          score += toRemove.size;
+          scoreElement.textContent = score;
+        }
+      }
+
+      // ----- EVENT HANDLERS (touch & mouse) -----
+
+      // touch start: get all touches
+      function onTouchStart(e) {
+        e.preventDefault();   // kill scroll, zoom, etc.
+        const touches = e.touches;
+        if (!touches) return;
+
+        const clientPositions = [];
+        for (let i = 0; i < touches.length; i++) {
+          const touch = touches[i];
+          clientPositions.push({
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+          });
+        }
+        popBubblesAt(clientPositions);
+      }
+
+      // mouse down (for desktop testing)
+      function onMouseDown(e) {
+        e.preventDefault();   // prevent accidental drag / selection
+        // only left button (button === 0)
+        if (e.button !== 0) return;
+        const clientPositions = [{
+          clientX: e.clientX,
+          clientY: e.clientY,
+        }];
+        popBubblesAt(clientPositions);
+      }
+
+      // additional touch/move prevent to be super safe (avoid pull-to-refresh)
+      function onTouchMove(e) {
+        e.preventDefault();
+      }
+      function onTouchEnd(e) {
+        e.preventDefault();   // optional, but safe
+      }
+      function onTouchCancel(e) {
+        e.preventDefault();
+      }
+
+      // disable context menu on canvas (long press menu)
+      function onContextMenu(e) {
+        e.preventDefault();
+      }
+
+      // ----- reset game -----
+      function resetGame() {
+        bubbles = [];
+        score = 0;
+        scoreElement.textContent = '0';
+        lastSpawnTime = performance.now();  // avoid spawn burst
+        // optional: add a couple starting bubbles for instant fun
+        for (let i = 0; i < 3; i++) {
+          bubbles.push(createBubble());
+        }
+      }
+
+      // ----- animation loop (update + draw) -----
+      function gameLoop(now) {
+        // spawn new bubbles based on timer
+        spawnBubbles(now);
+        // move bubbles
+        updateBubbles();
+        // draw everything
+        draw();
+        // next frame
+        requestAnimationFrame(gameLoop);
+      }
+
+      // ----- attach listeners -----
+      function initGame() {
+        // Touch events (mobile)
+        canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+        canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+        canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+        canvas.addEventListener('touchcancel', onTouchCancel, { passive: false });
+
+        // Mouse event (desktop)
+        canvas.addEventListener('mousedown', onMouseDown);
+
+        // Disable right-click / context menu on canvas
+        canvas.addEventListener('contextmenu', onContextMenu);
+
+        // Reset button
+        document.getElementById('resetButton').addEventListener('click', (e) => {
+          resetGame();
+        });
+        // also prevent any stray touch events on reset button from bubbling to canvas
+        document.getElementById('resetButton').addEventListener('touchstart', (e) => {
+          e.stopPropagation();   // avoid triggering canvas pop
+        }, { passive: true });
+
+        // initial reset gives some bubbles
+        resetGame();
+
+        // start the loop
+        requestAnimationFrame(gameLoop);
+      }
+
+      // start everything after DOM ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initGame);
+      } else {
+        initGame();
+      }
+
+      // optional: handle window resize (nothing special, just redraw loop handles it)
+      // but we must keep canvas rect mapping accurate – fine.
+    })();
+  </script>
 </body>
 </html>
