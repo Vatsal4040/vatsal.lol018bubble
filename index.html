@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ABYSS ULTIMATE · bubble surge</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #03050a;
+      background: radial-gradient(circle at 30% 30%, #1a283b, #010101);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      touch-action: pan-y;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 460px;
+      padding: 8px 8px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* top bar */
+    .stats-bar {
+      width: 100%;
+      background: rgba(5, 15, 25, 0.85);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid #00ffff30;
+      border-radius: 60px;
+      padding: 12px 18px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 15px 30px black, 0 0 0 2px #0ff1a inset;
+      color: #bfffff;
+      gap: 8px;
+    }
+
+    .stat-group {
+      display: flex;
+      gap: 16px;
+      align-items: baseline;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .stat-label {
+      font-size: 0.65rem;
+      letter-spacing: 1px;
+      color: #8fcfdf;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+      text-shadow: 0 0 10px cyan;
+    }
+
+    .powerup-icons {
+      display: flex;
+      gap: 10px;
+    }
+    .powerup-badge {
+      background: #0e1a28;
+      border-radius: 30px;
+      padding: 4px 12px;
+      border: 1px solid cyan;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 0 12px cyan;
+    }
+
+    #pauseBtn {
+      background: #1f2f40;
+      border: 1px solid white;
+      color: white;
+      border-radius: 40px;
+      padding: 6px 16px;
+      font-size: 1rem;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .canvas-wrapper {
+      width: 100%;
+      background: #030609;
+      border-radius: 48px;
+      padding: 8px;
+      box-shadow: 0 20px 30px black, 0 0 0 2px #00ccff40 inset;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #0b1420;
+      background: radial-gradient(circle at 30% 40%, #1e3347, #030812);
+      border-radius: 40px;
+      touch-action: none;
+      cursor: crosshair;
+      box-shadow: inset 0 -10px 20px rgba(0,0,0,0.8);
+    }
+
+    /* overlay */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(12px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      transition: opacity 0.2s;
+    }
+    .overlay.hidden { display: none; }
+
+    .overlay-card {
+      background: #0b1422;
+      border: 2px solid #0ff;
+      border-radius: 72px;
+      padding: 36px 28px;
+      max-width: 380px;
+      width: 85%;
+      text-align: center;
+      box-shadow: 0 0 60px cyan;
+      color: white;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .overlay-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #0ff;
+      text-shadow: 0 0 20px cyan;
+    }
+
+    .btn {
+      background: #0e1a2a;
+      border: 2px solid #0ff;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 600;
+      padding: 12px 20px;
+      border-radius: 60px;
+      margin: 12px 0;
+      width: 100%;
+      box-shadow: 0 8px 0 #005577, 0 0 20px cyan;
+      transition: 0.05s linear;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .btn:active {
+      transform: translateY(5px);
+      box-shadow: 0 3px 0 #005577, 0 0 30px cyan;
+    }
+    .small-note { color: #7f9faf; margin: 8px; }
+
+    /* settings sliders etc */
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 12px 0;
+      color: #b0f0ff;
+    }
+    input[type=range] { width: 140px; }
+    .mode-selector {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 15px 0;
+    }
+    .mode-btn {
+      background: #1e2a38;
+      border: 1px solid cyan;
+      border-radius: 40px;
+      padding: 10px 16px;
+      font-size: 1rem;
+      color: white;
+      flex: 1 0 auto;
+    }
+    .mode-btn.active {
+      background: cyan;
+      color: black;
+      font-weight: bold;
+    }
+    .leaderboard-entry {
+      font-size: 1.2rem;
+      color: #cfecff;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="stats-bar">
+      <div class="stat-group">
+        <div class="stat"><span class="stat-label">💀MISS</span><span class="stat-value" id="missDisplay">0/5</span></div>
+        <div class="stat"><span class="stat-label">⏱️TIME</span><span class="stat-value" id="timerDisplay">0.0</span></div>
+        <div class="stat"><span class="stat-label">⚡LVL</span><span class="stat-value" id="levelDisplay">1</span></div>
+      </div>
+      <div class="powerup-icons" id="powerupIcons"></div>
+      <button id="pauseBtn" style="font-size:0.9rem;">⏸️</button>
+    </div>
+
+    <div class="canvas-wrapper">
+      <canvas id="gameCanvas" width="400" height="600"></canvas>
+    </div>
+  </div>
+
+  <!-- START OVERLAY (with mode select & settings) -->
+  <div id="startOverlay" class="overlay">
+    <div class="overlay-card">
+      <div class="overlay-title">ABYSS ULTIMATE</div>
+      <div class="mode-selector" id="modeSelector">
+        <button class="mode-btn" data-mode="endless">⚔️ENDLESS</button>
+        <button class="mode-btn" data-mode="timed">⏱️TIMED</button>
+        <button class="mode-btn" data-mode="zen">🧘ZEN</button>
+        <button class="mode-btn" data-mode="challenge">🔥CHALLENGE</button>
+      </div>
+      <div id="leaderboardPreview" style="margin:15px 0; border-top:1px solid cyan; padding:10px;">
+        <div style="color:#0ff;">🏆 LEADERBOARD</div>
+        <div id="leaderboardText">endless: 0 | timed: 0</div>
+      </div>
+      <button class="btn" id="openSettingsBtn">⚙️ SETTINGS</button>
+      <button class="btn" id="startBtn">▶ START GAME</button>
+      <div class="small-note">❄️🐢❤️✨🧲🛡️ powerups • 💥 special bubbles</div>
+    </div>
+  </div>
+
+  <!-- SETTINGS OVERLAY -->
+  <div id="settingsOverlay" class="overlay hidden">
+    <div class="overlay-card">
+      <div class="overlay-title">SETTINGS</div>
+      <div class="setting-row"><span>🔵 Bubble size</span><input type="range" id="sizeSlider" min="0.7" max="1.5" step="0.05" value="1.0"></div>
+      <div class="setting-row"><span>⚡ Speed</span><input type="range" id="speedSlider" min="0.5" max="2.0" step="0.1" value="1.0"></div>
+      <div class="setting-row"><span>🎨 Colorblind mode</span><input type="checkbox" id="colorblindToggle"></div>
+      <div class="setting-row"><span>🔊 Sound</span><input type="checkbox" id="soundToggle" checked></div>
+      <div class="setting-row"><span>📳 Haptic</span><input type="checkbox" id="hapticToggle" checked></div>
+      <button class="btn" id="resetLeaderboardBtn" style="font-size:1rem;">♻️ Reset leaderboard</button>
+      <button class="btn" id="closeSettingsBtn">⬅ BACK</button>
+    </div>
+  </div>
+
+  <!-- GAME OVER OVERLAY -->
+  <div id="gameoverOverlay" class="overlay hidden">
+    <div class="overlay-card">
+      <div class="overlay-title">GAME OVER</div>
+      <div class="stat" style="font-size:2rem;" id="finalScoreDisplay">0</div>
+      <div id="finalTimeDisplay" style="font-size:1.2rem;">time 0.0s</div>
+      <div id="finalModeDisplay" style="margin:10px;"></div>
+      <button class="btn" id="restartBtn">↻ PLAY AGAIN</button>
+      <button class="btn" id="menuBtn">🏠 MENU</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ---------- configuration & global vars ----------
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const W = 400, H = 600;
+
+      // DOM elements
+      const missSpan = document.getElementById('missDisplay');
+      const timerSpan = document.getElementById('timerDisplay');
+      const levelSpan = document.getElementById('levelDisplay');
+      const powerupIconsDiv = document.getElementById('powerupIcons');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const startOverlay = document.getElementById('startOverlay');
+      const settingsOverlay = document.getElementById('settingsOverlay');
+      const gameoverOverlay = document.getElementById('gameoverOverlay');
+      const startBtn = document.getElementById('startBtn');
+      const openSettingsBtn = document.getElementById('openSettingsBtn');
+      const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+      const restartBtn = document.getElementById('restartBtn');
+      const menuBtn = document.getElementById('menuBtn');
+      const resetLeaderboardBtn = document.getElementById('resetLeaderboardBtn');
+      const modeSelector = document.getElementById('modeSelector');
+      const leaderboardText = document.getElementById('leaderboardText');
+      const finalScoreSpan = document.getElementById('finalScoreDisplay');
+      const finalTimeSpan = document.getElementById('finalTimeDisplay');
+      const finalModeSpan = document.getElementById('finalModeDisplay');
+
+      // settings inputs
+      const sizeSlider = document.getElementById('sizeSlider');
+      const speedSlider = document.getElementById('speedSlider');
+      const colorblindToggle = document.getElementById('colorblindToggle');
+      const soundToggle = document.getElementById('soundToggle');
+      const hapticToggle = document.getElementById('hapticToggle');
+
+      // ---------- game state ----------
+      let gameState = 'start'; // start, playing, paused, gameover
+      let mode = 'endless';    // endless, timed, zen, challenge
+      let bubbles = [];
+      let particles = [];
+      let powerups = [];       // active powerups (each with type, endTime)
+      let score = 0;
+      let missCount = 0;
+      const MISS_MAX = 5;
+      let gameStartTime = 0;
+      let elapsedTime = 0;
+      let currentLevel = 1;
+      let levelUpTimer = 0;
+      const LEVEL_INTERVAL = 30; // seconds
+      let lastSpawnTime = 0;
+      let pausedTime = 0;
+
+      // powerup definitions
+      const POWERUP_TYPES = {
+        freeze: { symbol: '❄️', color: '#aaf', duration: 3000 },
+        slowmo: { symbol: '🐢', color: '#8f8', duration: 5000 },
+        extralife: { symbol: '❤️', color: '#f66', duration: 0 }, // instant
+        multiplier: { symbol: '✨', color: '#ff5', duration: 5000 },
+        magnet: { symbol: '🧲', color: '#fa0', duration: 5000 },
+        shield: { symbol: '🛡️', color: '#6cf', duration: 0 } // until used
+      };
+      let activeMultiplier = 1;
+      let shieldActive = false;
+      let magnetActive = false;
+      let slowmoFactor = 1;
+      let freezeActive = false;
+
+      // powerup spawn
+      let lastPowerupSpawn = 0;
+      const POWERUP_SPAWN_COOLDOWN = 8000; // ms
+      const POWERUP_LIFETIME = 8000;
+
+      // special bubble types
+      const BUBBLE_TYPES = {
+        normal: 0,
+        golden: 1,
+        bomb: 2,
+        decoy: 3,
+        chain: 4
+      };
+
+      // settings
+      let bubbleSizeMultiplier = 1.0;
+      let globalSpeedMultiplier = 1.0;
+      let colorblind = false;
+      let soundEnabled = true;
+      let hapticEnabled = true;
+
+      // leaderboard (localStorage)
+      let highScoreEndless = 0;
+      let highScoreTimed = 0;
+      function loadLeaderboard() {
+        try {
+          highScoreEndless = parseInt(localStorage.getItem('abyss_endless') || '0');
+          highScoreTimed = parseInt(localStorage.getItem('abyss_timed') || '0');
+        } catch (e) {}
+        updateLeaderboardDisplay();
+      }
+      function saveLeaderboard() {
+        try {
+          localStorage.setItem('abyss_endless', highScoreEndless);
+          localStorage.setItem('abyss_timed', highScoreTimed);
+        } catch (e) {}
+      }
+      function updateLeaderboardDisplay() {
+        leaderboardText.innerText = `endless: ${highScoreEndless} | timed: ${highScoreTimed}`;
+      }
+      loadLeaderboard();
+
+      // ---------- helper functions ----------
+      function rand(min, max) { return Math.random() * (max - min) + min; }
+      function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+      function getSpeedMultiplier() {
+        let base = 1.0 + (currentLevel - 1) * 0.25;
+        if (slowmoFactor < 1) base *= slowmoFactor;
+        return base * globalSpeedMultiplier;
+      }
+
+      // create bubble with possible special type
+      function createBubble() {
+        const typeRand = Math.random();
+        let type = BUBBLE_TYPES.normal;
+        if (typeRand < 0.1) type = BUBBLE_TYPES.golden;
+        else if (typeRand < 0.18) type = BUBBLE_TYPES.bomb;
+        else if (typeRand < 0.24) type = BUBBLE_TYPES.decoy;
+        else if (typeRand < 0.3) type = BUBBLE_TYPES.chain;
+
+        const baseRadius = rand(12, 24) * bubbleSizeMultiplier;
+        let r = Math.min(35, Math.max(8, baseRadius));
+        const x = rand(r, W - r);
+        const y = H - r;
+        let baseSpeed = rand(0.7, 2.0);
+        if (type === BUBBLE_TYPES.golden) baseSpeed *= 1.2;
+        const speed = baseSpeed * getSpeedMultiplier();
+
+        let color, symbol = '';
+        if (colorblind) {
+          // patterns will be drawn separately
+          color = 'white';
+        } else {
+          if (type === BUBBLE_TYPES.golden) color = 'gold';
+          else if (type === BUBBLE_TYPES.bomb) color = '#c44';
+          else if (type === BUBBLE_TYPES.decoy) color = 'rgba(200,230,255,0.5)';
+          else if (type === BUBBLE_TYPES.chain) color = '#8f8';
+          else color = `hsl(${randInt(180,260)}, 80%, 65%)`;
+        }
+
+        return { x, y, r, speed, type, color, symbol, chainReaction: false };
+      }
+
+      // spawn random powerup
+      function spawnPowerup() {
+        if (gameState !== 'playing') return;
+        const types = ['freeze','slowmo','extralife','multiplier','magnet','shield'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        const x = rand(40, W-40);
+        const y = rand(80, H-120);
+        powerups.push({
+          type,
+          x, y,
+          r: 22,
+          spawnTime: performance.now(),
+          collected: false
+        });
+      }
+
+      // particle effect
+      function addPopParticles(x, y) {
+        for (let i=0; i<8; i++) {
+          particles.push({
+            x, y,
+            vx: rand(-2,2), vy: rand(-3,1),
+            life: 1.0,
+            size: rand(2,6)
+          });
+        }
+      }
+
+      // screen shake
+      let shake = 0;
+      function addShake(amount) {
+        shake = Math.min(shake + amount, 15);
+      }
+
+      // haptic
+      function doHaptic() {
+        if (hapticEnabled && navigator.vibrate) navigator.vibrate(30);
+      }
+
+      // sound (simple beep using Web Audio)
+      let audioCtx = null;
+      function playPop() {
+        if (!soundEnabled) return;
+        if (!audioCtx) {
+          try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          } catch (e) { return; }
+        }
+        if (audioCtx.state === 'suspended') return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 400 + Math.random()*200;
+        gain.gain.value = 0.1;
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+      }
+
+      // ---------- game flow ----------
+      function startGame() {
+        gameState = 'playing';
+        bubbles = [];
+        particles = [];
+        powerups = [];
+        score = 0;
+        missCount = 0;
+        currentLevel = 1;
+        elapsedTime = 0;
+        activeMultiplier = 1;
+        shieldActive = false;
+        magnetActive = false;
+        slowmoFactor = 1;
+        freezeActive = false;
+        gameStartTime = performance.now();
+        levelUpTimer = gameStartTime + LEVEL_INTERVAL * 1000;
+        lastSpawnTime = gameStartTime;
+        lastPowerupSpawn = gameStartTime;
+        missSpan.textContent = mode==='zen' ? '∞' : (missCount+'/'+ (mode==='challenge'?3:5));
+        timerSpan.textContent = '0.0';
+        levelSpan.textContent = '1';
+        updatePowerupIcons();
+        startOverlay.classList.add('hidden');
+        gameoverOverlay.classList.add('hidden');
+        for (let i=0; i<4; i++) bubbles.push(createBubble());
+        if (mode==='challenge') currentLevel=5;
+        if (mode==='timed') missSpan.textContent = '∞'; // no miss limit
+      }
+
+      function pauseGame() {
+        if (gameState === 'playing') { gameState = 'paused'; pausedTime = performance.now(); }
+        else if (gameState === 'paused') { gameState = 'playing'; gameStartTime += (performance.now() - pausedTime); levelUpTimer += (performance.now() - pausedTime); }
+      }
+
+      function gameOver() {
+        gameState = 'gameover';
+        if (mode === 'endless' && score > highScoreEndless) { highScoreEndless = score; saveLeaderboard(); }
+        if (mode === 'timed' && score > highScoreTimed) { highScoreTimed = score; saveLeaderboard(); }
+        finalScoreSpan.innerText = `💥 ${score}`;
+        finalTimeSpan.innerText = `⏱️ ${elapsedTime.toFixed(1)}s`;
+        finalModeSpan.innerText = `mode: ${mode}`;
+        gameoverOverlay.classList.remove('hidden');
+      }
+
+      function addMiss() {
+        if (gameState !== 'playing') return;
+        if (mode === 'zen' || mode === 'timed') return;
+        if (shieldActive) { shieldActive = false; return; }
+        missCount++;
+        let maxMiss = mode==='challenge'?3:5;
+        missSpan.textContent = missCount+'/'+maxMiss;
+        if (missCount >= maxMiss) gameOver();
+      }
+
+      // ---------- touch handling ----------
+      function getCanvasCoords(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return null;
+        const scaleX = W / rect.width, scaleY = H / rect.height;
+        const relX = (clientX - rect.left) / rect.width, relY = (clientY - rect.top) / rect.height;
+        return { x: relX * W, y: relY * H };
+      }
+
+      function handleTap(positions) {
+        if (gameState !== 'playing') return;
+        let popped = false;
+
+        for (let pos of positions) {
+          const pt = getCanvasCoords(pos.clientX, pos.clientY);
+          if (!pt) continue;
+
+          // powerup collection
+          for (let i=powerups.length-1; i>=0; i--) {
+            const p = powerups[i];
+            const dx = pt.x - p.x, dy = pt.y - p.y;
+            if (dx*dx+dy*dy <= p.r*p.r) {
+              activatePowerup(p.type);
+              powerups.splice(i,1);
+              doHaptic();
+              playPop();
+              popped = true;
+            }
+          }
+
+          // bubble collision (backwards to allow removal)
+          for (let i=bubbles.length-1; i>=0; i--) {
+            const b = bubbles[i];
+            if (b.type === BUBBLE_TYPES.decoy) continue; // unpoppable
+            const dx = pt.x - b.x, dy = pt.y - b.y;
+            if (dx*dx+dy*dy <= b.r*b.r) {
+              // handle special types
+              if (b.type === BUBBLE_TYPES.bomb) {
+                for (let j=0; j<2; j++) addMiss();
+                addShake(10);
+              } else if (b.type === BUBBLE_TYPES.golden) {
+                score += 5;
+              } else if (b.type === BUBBLE_TYPES.chain) {
+                // pop nearby
+                let nearby = bubbles.filter(other => {
+                  if (other === b) return false;
+                  const d = Math.hypot(other.x - b.x, other.y - b.y);
+                  return d < 50;
+                });
+                for (let nb of nearby) {
+                  score += (nb.type === BUBBLE_TYPES.golden) ? 5 : 1;
+                  addPopParticles(nb.x, nb.y);
+                }
+                bubbles = bubbles.filter(other => !nearby.includes(other) && other !== b);
+              } else {
+                score += activeMultiplier;
+              }
+              addPopParticles(b.x, b.y);
+              bubbles.splice(i,1);
+              popped = true;
+              doHaptic();
+              playPop();
+            }
+          }
+        }
+      }
+
+      function activatePowerup(type) {
+        const now = performance.now();
+        switch(type) {
+          case 'freeze': freezeActive = true; setTimeout(()=>freezeActive=false, 3000); break;
+          case 'slowmo': slowmoFactor = 0.5; setTimeout(()=>slowmoFactor=1, 5000); break;
+          case 'extralife': if (missCount>0) missCount--; missSpan.textContent = missCount+'/'+ (mode==='challenge'?3:5); break;
+          case 'multiplier': activeMultiplier = 2; setTimeout(()=>activeMultiplier=1, 5000); break;
+          case 'magnet': magnetActive = true; setTimeout(()=>magnetActive=false, 5000); break;
+          case 'shield': shieldActive = true; break;
+        }
+        updatePowerupIcons();
+      }
+
+      function updatePowerupIcons() {
+        let html = '';
+        if (freezeActive) html += '<span class="powerup-badge">❄️</span>';
+        if (slowmoFactor<1) html += '<span class="powerup-badge">🐢</span>';
+        if (activeMultiplier>1) html += '<span class="powerup-badge">✨x2</span>';
+        if (magnetActive) html += '<span class="powerup-badge">🧲</span>';
+        if (shieldActive) html += '<span class="powerup-badge">🛡️</span>';
+        powerupIconsDiv.innerHTML = html;
+      }
+
+      // ---------- update loop with delta time ----------
+      let lastTimestamp = 0;
+      function updateGame(now) {
+        if (gameState !== 'playing') return;
+
+        // delta in seconds
+        let dt = Math.min(0.05, (now - lastTimestamp) / 1000); // max 50ms
+        lastTimestamp = now;
+
+        elapsedTime = (now - gameStartTime) / 1000;
+        timerSpan.textContent = elapsedTime.toFixed(1);
+
+        // level up
+        if (now >= levelUpTimer && mode !== 'zen') {
+          currentLevel++;
+          levelSpan.textContent = currentLevel;
+          levelUpTimer += LEVEL_INTERVAL * 1000;
+          addShake(5);
+        }
+
+        // spawn powerups
+        if (now - lastPowerupSpawn > POWERUP_SPAWN_COOLDOWN && powerups.length < 3) {
+          spawnPowerup();
+          lastPowerupSpawn = now;
+        }
+
+        // spawn bubbles
+        if (now - lastSpawnTime > 600) {
+          bubbles.push(createBubble());
+          lastSpawnTime = now;
+        }
+
+        // move bubbles if not frozen
+        if (!freezeActive) {
+          for (let i=bubbles.length-1; i>=0; i--) {
+            const b = bubbles[i];
+            b.y -= b.speed * dt * 60; // adjust for dt (base speed per frame at 60fps)
+            // magnet effect
+            if (magnetActive) {
+              // pull toward center? we could pull toward last touch, but for simplicity, pull slightly
+            }
+            // off top miss
+            if (b.y + b.r < 0) {
+              if (b.type !== BUBBLE_TYPES.decoy) addMiss();
+              bubbles.splice(i,1);
+            }
+          }
+        }
+
+        // powerup lifetime expire
+        powerups = powerups.filter(p => now - p.spawnTime < POWERUP_LIFETIME);
+
+        // update particles
+        for (let i=particles.length-1; i>=0; i--) {
+          let p = particles[i];
+          p.x += p.vx; p.y += p.vy;
+          p.life -= 0.02;
+          if (p.life <= 0) particles.splice(i,1);
+        }
+
+        // timed mode end condition
+        if (mode === 'timed' && elapsedTime >= 60) gameOver();
+      }
+
+      // ---------- drawing (with colorblind patterns) ----------
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        // background
+        let grad = ctx.createRadialGradient(200, 400, 50, 200, 300, 500);
+        grad.addColorStop(0, '#0e1f30'); grad.addColorStop(1, '#010509');
+        ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+
+        // grid
+        ctx.strokeStyle = '#1a4055'; ctx.lineWidth = 0.5;
+        for (let i=0; i<H; i+=40) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(W,i); ctx.stroke(); }
+
+        // powerups
+        for (let p of powerups) {
+          ctx.shadowBlur = 25; ctx.shadowColor = '#0ff';
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 2*Math.PI);
+          ctx.fillStyle = '#0a1c2a'; ctx.fill();
+          ctx.strokeStyle = 'cyan'; ctx.lineWidth = 3; ctx.stroke();
+          ctx.font = 'bold 26px sans-serif'; ctx.fillStyle = 'white'; ctx.fillText(POWERUP_TYPES[p.type].symbol, p.x-16, p.y+10);
+        }
+
+        // bubbles
+        for (let b of bubbles) {
+          ctx.shadowBlur = 18; ctx.shadowColor = '#0ff';
+          // color or pattern
+          if (colorblind) {
+            // pattern based on type
+            ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, 2*Math.PI); ctx.fill();
+            ctx.strokeStyle = 'black'; ctx.lineWidth = 2; ctx.stroke();
+            if (b.type === BUBBLE_TYPES.golden) { ctx.fillStyle = 'gold'; ctx.font = 'bold 20px monospace'; ctx.fillText('💰', b.x-14, b.y+8); }
+            else if (b.type === BUBBLE_TYPES.bomb) { ctx.fillStyle = 'red'; ctx.fillText('💣', b.x-12, b.y+8); }
+            else if (b.type === BUBBLE_TYPES.decoy) { ctx.fillStyle = '#ccc'; ctx.fillText('❓', b.x-10, b.y+8); }
+            else if (b.type === BUBBLE_TYPES.chain) { ctx.fillStyle = '#0f0'; ctx.fillText('⛓️', b.x-14, b.y+8); }
+          } else {
+            ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, 2*Math.PI);
+            ctx.fillStyle = b.color; ctx.fill();
+            if (b.type === BUBBLE_TYPES.golden) { ctx.fillStyle = 'gold'; ctx.font = 'bold 20px sans-serif'; ctx.fillText('🌟', b.x-14, b.y+8); }
+            else if (b.type === BUBBLE_TYPES.bomb) { ctx.fillStyle = 'black'; ctx.fillText('💣', b.x-12, b.y+8); }
+            else if (b.type === BUBBLE_TYPES.decoy) { ctx.fillStyle = '#fff'; ctx.fillText('❓', b.x-10, b.y+8); }
+            else if (b.type === BUBBLE_TYPES.chain) { ctx.fillStyle = '#fff'; ctx.fillText('⛓️', b.x-14, b.y+8); }
+          }
+          // highlight
+          ctx.shadowBlur = 5;
+          ctx.beginPath(); ctx.ellipse(b.x-b.r*0.2, b.y-b.r*0.2, b.r*0.2, b.r*0.1, 0, 0, 2*Math.PI);
+          ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
+        }
+
+        // particles
+        for (let p of particles) {
+          ctx.globalAlpha = p.life;
+          ctx.fillStyle = '#ffddaa'; ctx.beginPath(); ctx.arc(p.x, p.y, p.size*0.5, 0, 2*Math.PI); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        // shake effect
+        if (shake > 0) {
+          ctx.save();
+          ctx.translate(rand(-shake,shake), rand(-shake,shake));
+          shake *= 0.9;
+          if (shake<0.5) shake=0;
+          ctx.restore();
+        }
+
+        if (freezeActive) {
+          ctx.fillStyle = 'rgba(0,255,255,0.1)'; ctx.fillRect(0,0,W,H);
+          ctx.font = 'bold 36px sans-serif'; ctx.fillStyle = 'white'; ctx.fillText('❄️', 160, 200);
+        }
+        ctx.shadowBlur = 0;
+      }
+
+      // ---------- animation loop ----------
+      function gameLoop(now) {
+        if (gameState === 'playing') updateGame(now);
+        draw();
+        requestAnimationFrame(gameLoop);
+      }
+
+      // ---------- events ----------
+      canvas.addEventListener('touchstart', e => { e.preventDefault(); if(gameState==='playing') { const pos = []; for(let t of e.touches) pos.push({clientX:t.clientX, clientY:t.clientY}); handleTap(pos); } });
+      canvas.addEventListener('mousedown', e => { e.preventDefault(); if(e.button===0 && gameState==='playing') handleTap([{clientX:e.clientX, clientY:e.clientY}]); });
+      canvas.addEventListener('contextmenu', e=>e.preventDefault());
+      pauseBtn.addEventListener('click', pauseGame);
+
+      startBtn.addEventListener('click', ()=>{
+        // get selected mode
+        let activeMode = document.querySelector('.mode-btn.active');
+        if (activeMode) mode = activeMode.dataset.mode;
+        startGame();
+      });
+      document.querySelectorAll('.mode-btn').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+          b.classList.add('active');
+          mode = b.dataset.mode;
+        });
+      });
+      openSettingsBtn.addEventListener('click', ()=> { startOverlay.classList.add('hidden'); settingsOverlay.classList.remove('hidden'); });
+      closeSettingsBtn.addEventListener('click', ()=> { settingsOverlay.classList.add('hidden'); startOverlay.classList.remove('hidden'); });
+      restartBtn.addEventListener('click', ()=> { gameoverOverlay.classList.add('hidden'); startGame(); });
+      menuBtn.addEventListener('click', ()=> { gameoverOverlay.classList.add('hidden'); startOverlay.classList.remove('hidden'); });
+      resetLeaderboardBtn.addEventListener('click', ()=>{ highScoreEndless=0; highScoreTimed=0; saveLeaderboard(); updateLeaderboardDisplay(); });
+
+      // settings listeners
+      sizeSlider.addEventListener('input', e=> bubbleSizeMultiplier = parseFloat(e.target.value));
+      speedSlider.addEventListener('input', e=> globalSpeedMultiplier = parseFloat(e.target.value));
+      colorblindToggle.addEventListener('change', e=> colorblind = e.target.checked);
+      soundToggle.addEventListener('change', e=> soundEnabled = e.target.checked);
+      hapticToggle.addEventListener('change', e=> hapticEnabled = e.target.checked);
+
+      // initial UI
+      startOverlay.classList.remove('hidden');
+      requestAnimationFrame(gameLoop);
+    })();
+  </script>
+</body>
+</html>
